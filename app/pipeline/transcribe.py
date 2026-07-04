@@ -1,6 +1,5 @@
 from faster_whisper import WhisperModel
-from onnxruntime.transformers.benchmark_helper import inference_ort_with_io_binding
-
+import argparse
 
 def transcribe_audio(audio_path: str, model_size: str = "small"):
     """
@@ -18,4 +17,7 @@ def transcribe_audio(audio_path: str, model_size: str = "small"):
     return results
 
 if __name__ == "__main__":
-    transcribe_audio("sample_data/meeting-clip2_16k.wav")
+    parser = argparse.ArgumentParser(description = "Transcribe an audio file using faster-whisper")
+    parser.add_argument("audio_path", help = "Path to the audio file to transcribe")
+    args = parser.parse_args()
+    transcribe_audio(args.audio_path)
