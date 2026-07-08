@@ -1,5 +1,8 @@
 import argparse
 import os
+import soundfile as sf
+import torch
+import numpy as np
 from dotenv import load_dotenv
 from pyannote.audio import Pipeline
 from pyannote.audio.pipelines.utils.hook import ProgressHook
@@ -16,8 +19,16 @@ def diarize(audio_path: str):
         token=hf_token
     )
 
+    data, sample_rate = sf.read(audio_path, dtype="float32")
+    if data.ndim == 1:
+        data = data[np.newaxis, :]
+    else:
+        data = data.T
+    waveform = torch.from_numpy(data)
+    audio_input = {"waveform": waveform, "sample_rate": sample_rate}
+
     with ProgressHook() as hook:
-        diarization = pipeline(audio_path, hook=hook)
+        diarization = pipeline(audio_input, hook=hook)
 
     segments = []
     for turn, _, speaker in diarization.speaker_diarization.itertracks(yield_label=True):
