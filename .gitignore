@@ -4,3 +4,4 @@ sample_data/*.mp3
 __pycache__/
 .venv/
 .DS_Store
+.idea/
