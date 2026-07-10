@@ -116,7 +116,7 @@ source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install -r requirements.txt
  
 # configure environment variables
-cp .env.example .env
+cp .env .env
 # edit .env with your DB connection string, HF token, and LLM API key
 ```
  
