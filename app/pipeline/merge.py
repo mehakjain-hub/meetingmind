@@ -43,11 +43,11 @@ def merge_transcript_with_speakers(aligned_segments, diarization_segments):
                 "speaker": w["speaker"],
                 "start": w["start"],
                 "end": w["end"],
-                "text": w["word"]
+                "text": w["word"].strip()
             }
         else:
             current_turn["end"] = w["end"]
-            current_turn["text"] += " " + w["word"]
+            current_turn["text"] += " " + w["word"].strip()
     if current_turn:
         turns.append(current_turn)
 
