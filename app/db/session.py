@@ -73,7 +73,7 @@ def get_session():
     Return a new SQLAlchemy session. Caller is responsible for closing it
     (session.close()) or use session_scope() below for automatic cleanup.
     """
-    return _SessionLocal
+    return _SessionLocal()
 
 @contextmanager
 def session_scope():
