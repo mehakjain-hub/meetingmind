@@ -14,7 +14,7 @@ def transcribe_audio(audio_path: str, model_size: str = "small"):
         print(f"[{segment.start:.2f}s -> {segment.end:.2f}s] {segment.text}")
         results.append({"start" : segment.start, "end" : segment.end, "text" : segment.text})
 
-    return results
+    return results, info.language
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Transcribe an audio file using faster-whisper")

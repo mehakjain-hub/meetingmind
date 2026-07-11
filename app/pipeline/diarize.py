@@ -4,10 +4,14 @@ import soundfile as sf
 import torch
 import numpy as np
 from dotenv import load_dotenv
+from pathlib import Path
 from pyannote.audio import Pipeline
 from pyannote.audio.pipelines.utils.hook import ProgressHook
 
-load_dotenv()
+from app.db.session import ENV_PATH
+
+ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
+load_dotenv(dotenv_path=ENV_PATH)
 
 def diarize(audio_path: str):
     hf_token = os.getenv("HF_TOKEN")

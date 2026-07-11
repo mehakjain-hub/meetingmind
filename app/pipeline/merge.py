@@ -61,7 +61,7 @@ if __name__ == "__main__":
     parser.add_argument("--language", default="en")
     args = parser.parse_args()
 
-    whisper_segments = transcribe_audio(args.audio_path, args.model_size)
+    whisper_segments, detected_language = transcribe_audio(args.audio_path, args.model_size)
     aligned_segments = align(args.audio_path, whisper_segments, args.language)
     diarization_segments = diarize(args.audio_path)
 

@@ -15,6 +15,7 @@ def load_align_model(language_code: str, device: str = "cpu"):
 def align(audio_path: str, segments: list, language_code: str = "en", device: str = "cpu"):
     audio = whisperx.load_audio(audio_path)
     model_a, metadata = load_align_model(language_code, device)
+    print(f"DEBUG: segments type={type(segments)}, first item type={type(segments[0])}, first item={segments[0]}")
     result = whisperx.align(
         segments, model_a, metadata, audio, device, return_char_alignments = False
     )
@@ -27,7 +28,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_size", default="small")
     args = parser.parse_args()
 
-    whisper_segments = transcribe_audio(args.audio_path, args.model_size)
+    whisper_segments, detected_language = transcribe_audio(args.audio_path, args.model_size)
     aligned_segments = align(args.audio_path, whisper_segments, args.language)
 
     aligned = align(args.audio_path, whisper_segments, args.language)
