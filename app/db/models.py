@@ -3,7 +3,7 @@ from sqlalchemy import (
     Column, Integer, String, Text, Float, DateTime, ForeignKey, Boolean
 )
 from sqlalchemy.orm import relationship, declarative_base
-from session import Base
+from app.db.session import Base
 
 class Meeting(Base):
     __tablename__ = "meetings"
@@ -13,7 +13,7 @@ class Meeting(Base):
     audio_filename = Column(String(255))
     duration_seconds = Column(Float)
     agenda_text = Column(Text)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     transcript = relationship("Transcript", back_populates="meeting", uselist=False, cascade="all, delete-orphan")
     summary = relationship("Summary", back_populates="meeting", uselist=False, cascade="all, delete-orphan")

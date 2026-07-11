@@ -58,8 +58,8 @@ DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_POR
 echo = False by default; flip to True temporarily if we need to see the raw
 SQL SQLAlchemy is generating for debugging.
 """
-_engine = create_engine(DATABASE_URL, echo = False, future = True)
-_SessionLocal = sessionmaker(bind = _engine, autoflush = False, autocommit = False)
+_engine = create_engine(DATABASE_URL, echo = True, future = True)
+_SessionLocal = sessionmaker(bind = _engine, autoflush = False)
 
 # Base class for ORM models (app/db/models.py will import this).
 Base = declarative_base()
