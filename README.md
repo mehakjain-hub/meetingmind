@@ -165,3 +165,25 @@ Pipeline was evaluated on a set of 8–10 sample meetings, with manual review of
 ## License
  
 MIT — see [LICENSE](LICENSE) for details.
+
+### Why Gemini for LLM Structured Extraction?
+
+MeetingMind is intentionally self-hosted end-to-end — audio preprocessing, transcription,
+alignment, and diarization all run locally with no external API dependency, to keep this a
+genuine "built the pipeline" project rather than a wrapper around a third-party service.
+
+The one external dependency is the LLM call for structured extraction (summary, decisions,
+action items, agenda status). For this step, I chose the **Gemini API** for two reasons:
+
+1. **Cost & reproducibility** — Gemini's free tier is the only one among major providers
+   (Claude, GPT, Gemini) that is production-grade and non-expiring. Anthropic's Claude API
+   has no free tier at all, and OpenAI's free access is a one-time trial credit. Since this
+   project should be runnable by anyone cloning the repo without a paid key, Gemini was the
+   only option consistent with that goal.
+2. **Task fit** — structured JSON extraction against a fixed schema is a well-specified task,
+   not a reasoning-heavy one, so the quality gap between frontier models matters less here
+   than it would for open-ended generation. The provider choice was driven more by
+   cost/access constraints than raw capability.
+
+(I'd also used the Gemini API previously, which let me move faster on this step and spend
+more time on the harder parts of the pipeline — Whisper/whisperX/pyannote alignment.)

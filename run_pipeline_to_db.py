@@ -37,7 +37,7 @@ def run_pipeline(raw_audio_path: str, title: str, model_size: str = "small", lan
     wav_path = preprocess_audio(raw_audio_path)
 
     print(f"[2/5] Transcribing with faster-whisper ({model_size})")
-    whisper_segments, detected_language = transcribe_audio(wav_path, model_size)
+    whisper_segments, detected_language = transcribe_audio(wav_path, model_size, language)
 
     print(f"[3/5] Aligning with WhisperX")
     aligned_segments = align(wav_path, whisper_segments, language)
