@@ -31,23 +31,23 @@ def _call_gemini_with_retry(prompt: str, max_retries: int = 4, base_delay: float
             status_code = getattr(e, "code", None)
             last_exception = e
             if status_code not in RETRYABLE_STATUS_CODES:
-                raise # not transient - fail immediately, don't waste retries
+                raise
             if attempt == max_retries - 1:
-                break # out of retries, fall through to raise below
+                break
             delay = base_delay * (2 ** attempt) + random.uniform(0, 1)
             print(f"[retry] Gemini returned {status_code} (attempt {attempt + 1}/{max_retries}), "
                   f"retrying in {delay:.1f}s...")
             time.sleep(delay)
-        raise RuntimeError(
-            f"Gemini call failed after {max_retries} attempts (transient errors)."
-        ) from last_exception
+    raise RuntimeError(
+        f"Gemini call failed after {max_retries} attempts (transient errors)."
+    ) from last_exception
 
 SUMMARY_PROMPT = """\
 You are analyzing a meeting transcript. Read it carefully and produce:
 
-1. A concise summary paragraph of what was discovered.
+1. A concise summary paragraph of what was discussed.
 2. A list of concrete decisions made (skip vague statements - only actual decisions).
-3. A list of action items, each with an assignee and task. Only include a deadline
+3. A list of action items, each with a task. Only include an assignee or deadline
    if one was explicitly stated in the meeting - do not invent or infer one.
 4. Agenda status: for each agenda item provided below, mark whether it was covered
    in the discussion, with a short note. If no agenda was provided, return an empty list.

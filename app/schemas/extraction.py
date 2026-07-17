@@ -7,8 +7,10 @@ class Decision(BaseModel):
     )
 
 class ActionItem(BaseModel):
-    assignee: str = Field(..., description = "Person responsible for the task")
-    task: str = Field(..., description = "What needs to be done")
+    task: str = Field(..., description="What needs to be done")
+    assignee: str | None = Field(
+        None, description = "Person responsible for the task. Null if no assignee was explicitly stated - do not infer one."
+    )
     deadline: str | None = Field(
         None, description = "Deadline as mentioned in the meeting (e.g. 'next Friday', 'EOD Monday'). "
         "Null if no deadline was stated - do not infer one.",
