@@ -6,8 +6,7 @@ import os, time, random
 from app.schemas.extraction import MeetingSummary
 
 load_dotenv(Path(__file__).resolve().parents[2] / ".env")
-
-client = genai.Client(api_key = os.environ["GEMINI_API_KEY"])
+client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
 """
 Transient errors worth retrying: 503 (overloaded), 429 (rate limit), 500 (internal).
@@ -20,11 +19,11 @@ def _call_gemini_with_retry(prompt: str, max_retries: int = 4, base_delay: float
     for attempt in range(max_retries):
         try:
             return client.models.generate_content(
-                model = "gemini-3.5-flash",
-                contents = prompt,
-                config = types.GenerateContentConfig(
-                    response_mime_type = "application/json",
-                    response_schema = MeetingSummary,
+                model="gemini-3.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=MeetingSummary,
                 ),
             )
         except errors.APIError as e:
@@ -49,11 +48,10 @@ You are analyzing a meeting transcript. Read it carefully and produce:
 2. A list of concrete decisions made (skip vague statements - only actual decisions).
 3. A list of action items, each with a task. Only include an assignee or deadline
    if one was explicitly stated in the meeting - do not invent or infer one.
-4. Agenda status: for each agenda item listed below, classify it as one of
-   "covered" (clearly discussed and resolved), "partially_covered" (mentioned but
-   left open or incomplete), or "not_covered" (no meaningful discussion found).
-   Include a short paraphrased piece of evidence from the transcript for each item
-   (leave evidence empty if not_covered). If no agenda was provided, return an empty list.
+4. Agenda status: for each agenda item provided below, classify it as covered,
+   partially covered, or not covered based on the discussion, with brief
+   supporting evidence (a short quote or paraphrase). Leave evidence empty if
+   not covered. If no agenda was provided, return an empty list.
 
 Agenda:
 {agenda}
@@ -63,20 +61,23 @@ Transcript:
 """
 
 def _format_agenda(agenda_items: list[str] | None) -> str:
+    """
+    Formats a list of agenda item strings into a numbered block for the prompt.
+    Returns a placeholder string if no agenda was provided.
+    """
     if not agenda_items:
         return "(none provided)"
-    return "\n".join(f"- {item}" for item in agenda_items)
+    return "\n".join(f"{i + 1}. {item}" for i, item in enumerate(agenda_items))
 
 def extract_meeting_summary(transcript: str, agenda_items: list[str] | None = None) -> MeetingSummary:
     prompt = SUMMARY_PROMPT.format(
-        agenda = _format_agenda(agenda_items),
-        transcript = transcript,
+        agenda=_format_agenda(agenda_items),
+        transcript=transcript
     )
     response = _call_gemini_with_retry(prompt)
-    return MeetingSummary.model_validate_json(response.text) # Safety Net: don't just trust Gemini's schema adherence
+    return MeetingSummary.model_validate_json(response.text)  # Safety Net: don't just trust Gemini's schema adherence
 
 if __name__ == "__main__":
     sample_transcript = "PASTE A REAL CLEANED TRANSCRIPT HERE"
-    sample_agenda = ["Discuss Q3 budget", "Assign new API integration owner"]
-    result = extract_meeting_summary(sample_transcript, sample_agenda)
-    print(result.model_dump_json(indent = 2))
+    result = extract_meeting_summary(sample_transcript)
+    print(result.model_dump_json(indent=2))
