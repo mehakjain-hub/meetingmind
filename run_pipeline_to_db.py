@@ -67,7 +67,11 @@ def run_pipeline(
     duration_seconds = max((t["end"] for t in turns), default=0.0)
 
     print(f"[6/6] Extracting summary, decisions, action items, agenda status")
-    result = extract_meeting_summary(cleaned_text, agenda)
+    # extract_meeting_summary expects a list of agenda item strings; the CLI
+    # takes a single semicolon-separated string, so split it here. agenda_text
+    # (below, stored on the Meeting row) keeps the original raw string as given.
+    agenda_items = [item.strip() for item in agenda.split(";") if item.strip()] if agenda else None
+    result = extract_meeting_summary(cleaned_text, agenda_items=agenda_items)
 
     print("\n--- Saving to DB ---")
     with session_scope() as session:
