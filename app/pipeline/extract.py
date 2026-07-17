@@ -49,9 +49,12 @@ You are analyzing a meeting transcript. Read it carefully and produce:
 2. A list of concrete decisions made (skip vague statements - only actual decisions).
 3. A list of action items, each with a task. Only include an assignee or deadline
    if one was explicitly stated in the meeting - do not invent or infer one.
-4. Agenda status: for each agenda item provided below, mark whether it was covered
-   in the discussion, with a short note. If no agenda was provided, return an empty list.
-   
+4. Agenda status: for each agenda item listed below, classify it as one of
+   "covered" (clearly discussed and resolved), "partially_covered" (mentioned but
+   left open or incomplete), or "not_covered" (no meaningful discussion found).
+   Include a short paraphrased piece of evidence from the transcript for each item
+   (leave evidence empty if not_covered). If no agenda was provided, return an empty list.
+
 Agenda:
 {agenda}
 
@@ -59,15 +62,21 @@ Transcript:
 {transcript}
 """
 
-def extract_meeting_summary(transcript: str, agenda: str | None = None) -> MeetingSummary:
+def _format_agenda(agenda_items: list[str] | None) -> str:
+    if not agenda_items:
+        return "(none provided)"
+    return "\n".join(f"- {item}" for item in agenda_items)
+
+def extract_meeting_summary(transcript: str, agenda_items: list[str] | None = None) -> MeetingSummary:
     prompt = SUMMARY_PROMPT.format(
-        agenda = agenda if agenda else "(none provided)",
-        transcript = transcript
+        agenda = _format_agenda(agenda_items),
+        transcript = transcript,
     )
     response = _call_gemini_with_retry(prompt)
     return MeetingSummary.model_validate_json(response.text) # Safety Net: don't just trust Gemini's schema adherence
 
 if __name__ == "__main__":
     sample_transcript = "PASTE A REAL CLEANED TRANSCRIPT HERE"
-    result = extract_meeting_summary(sample_transcript)
+    sample_agenda = ["Discuss Q3 budget", "Assign new API integration owner"]
+    result = extract_meeting_summary(sample_transcript, sample_agenda)
     print(result.model_dump_json(indent = 2))
