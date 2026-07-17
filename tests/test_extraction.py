@@ -31,7 +31,7 @@ def format_transcript(turns: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def run_full_pipeline(audio_path: str, agenda: str | None = None):
+def run_full_pipeline(audio_path: str, agenda_items: list[str] | None = None):
     print(f"\n{'='*60}")
     print(f"Processing: {audio_path}")
     print(f"{'='*60}")
@@ -53,7 +53,7 @@ def run_full_pipeline(audio_path: str, agenda: str | None = None):
     print("\n--- CLEANED TRANSCRIPT (first 800 chars) ---")
     print(transcript_text[:800])
 
-    result = extract_meeting_summary(transcript_text, agenda=agenda)
+    result = extract_meeting_summary(transcript_text, agenda_items=agenda_items)
 
     print("\n--- EXTRACTED MEETING SUMMARY ---")
     print(result.model_dump_json(indent=2))
@@ -61,14 +61,26 @@ def run_full_pipeline(audio_path: str, agenda: str | None = None):
     return transcript_text, result
 
 
+# Sample agenda for clip 1 - based on what's actually discussed in the transcript.
+# Deliberately includes one item NOT discussed ("Q3 budget review") to check whether
+# Gemini correctly marks it uncovered rather than defaulting everything to "covered".
+CLIP1_AGENDA = [
+    "Relocation and flexible working hours",
+    "Update from research/MISRAEUS presentation",
+    "Q3 budget review",
+]
+
 if __name__ == "__main__":
-    clips = [
-        "/Users/mehakjain/meetingmind/sample_data/meeting-clip2 (1 speaker).wav",
-        "/Users/mehakjain/meetingmind/sample_data/meeting-clip1 (2 speakers)_16k_mono.wav",
+    jobs = [
+        ("/Users/mehakjain/meetingmind/sample_data/meeting-clip2 (1 speaker).wav", None),
+        (
+            "/Users/mehakjain/meetingmind/sample_data/meeting-clip1 (2 speakers)_16k_mono.wav",
+            CLIP1_AGENDA,
+        ),
     ]
 
-    for clip in clips:
+    for clip, agenda_items in jobs:
         try:
-            run_full_pipeline(clip)
+            run_full_pipeline(clip, agenda_items=agenda_items)
         except Exception as e:
             print(f"\n[ERROR] Failed on {clip}: {e}")
