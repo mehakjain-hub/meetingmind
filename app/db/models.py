@@ -1,8 +1,6 @@
 from datetime import datetime, timezone
-from sqlalchemy import (
-    Column, Integer, String, Text, Float, DateTime, ForeignKey, Boolean
-)
-from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy import (Column, Integer, String, Text, Float, DateTime, ForeignKey, Boolean)
+from sqlalchemy.orm import relationship
 from app.db.session import Base
 
 class Meeting(Base):
@@ -14,7 +12,6 @@ class Meeting(Base):
     duration_seconds = Column(Float)
     agenda_text = Column(Text)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-
     transcript = relationship("Transcript", back_populates="meeting", uselist=False, cascade="all, delete-orphan")
     summary = relationship("Summary", back_populates="meeting", uselist=False, cascade="all, delete-orphan")
     action_items = relationship("ActionItem", back_populates="meeting", cascade="all, delete-orphan")
@@ -27,7 +24,6 @@ class Transcript(Base):
     raw_text = Column(Text) # merged, speaker-labeled transcript
     cleaned_text = Column(Text) # after filler-word/punctuation-cleaning
     language = Column(String(10), default="en")
-
     meeting = relationship("Meeting", back_populates="transcript")
 
 class Summary(Base):
@@ -36,9 +32,8 @@ class Summary(Base):
     id = Column(Integer, primary_key=True)
     meeting_id = Column(Integer, ForeignKey("meetings.id"), nullable=False, unique=True)
     summary_text = Column(Text)
-    decisions = Column(Text) # store as JSON string or move to its own table later if needed
-    agenda_status = Column(Text) # JSON string: {agenda_item: covered/not_covered}
-
+    decisions = Column(Text)
+    agenda_status = Column(Text)
     meeting = relationship("Meeting", back_populates="summary")
 
 class ActionItem(Base):
@@ -50,5 +45,4 @@ class ActionItem(Base):
     task = Column(Text, nullable=False)
     deadline = Column(String(100)) # keep as string unless want strict date parsing from LLM output
     is_completed = Column(Boolean, default=False)
-
     meeting = relationship("Meeting", back_populates="action_items")

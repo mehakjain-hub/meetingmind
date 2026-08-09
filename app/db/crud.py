@@ -1,9 +1,6 @@
 """
-app/db/crud.py - Single-purpose DB operations for MeetingMind.
-
-Each function takes a session (caller manages the session_scope context)
-and does exactly one insert or one query. Pipeline/business logic stays
-out of this file.
+Each function takes a session (caller manages the session_scope context) and does exactly one insert
+or one query. Pipeline/business logic stays out of this file.
 """
 
 import json
@@ -12,9 +9,14 @@ from sqlalchemy.orm import joinedload
 
 def create_meeting(session, title, audio_filename=None, duration_seconds=None, agenda_text=None):
     """
-    Insert a new meeting row. Commits immediately so the caller gets back
+    Insert a new meeting row. Flushes (not commits) so the caller gets back
     a populated meeting.id — needed as a foreign key before inserting the
-    transcript or anything else.
+    transcript or anything else — without ending the surrounding
+    session_scope() transaction. The whole meeting's writes (meeting,
+    transcript, summary, action_items) commit or roll back together when
+    the caller's `with session_scope() as session:` block exits, so a
+    failure partway through (e.g. a bad extraction response) doesn't leave
+    an orphan meeting row with no summary.
     """
     meeting = Meeting(
         title=title,
@@ -23,14 +25,16 @@ def create_meeting(session, title, audio_filename=None, duration_seconds=None, a
         agenda_text=agenda_text,
     )
     session.add(meeting)
-    session.commit()  # commit here, not just flush — we need meeting.id populated
+    session.flush()  # flush, not commit — populates meeting.id, keeps txn open
     session.refresh(meeting)
     return meeting
 
 def save_transcript(session, meeting_id, raw_text, cleaned_text=None, language="en"):
     """
     Insert a transcript row linked to an existing meeting_id.
-    Assumes create_meeting() has already been called and committed.
+    Assumes create_meeting() has already been called (flushed) in the same
+    session — the row isn't durable until the caller's session_scope()
+    commits.
     """
     transcript = Transcript(
         meeting_id=meeting_id,
@@ -39,7 +43,7 @@ def save_transcript(session, meeting_id, raw_text, cleaned_text=None, language="
         language=language,
     )
     session.add(transcript)
-    session.commit()
+    session.flush()
     session.refresh(transcript)
     return transcript
 
@@ -50,12 +54,26 @@ def get_meeting_history(session):
     return session.query(Meeting).order_by(Meeting.created_at.desc()).all()
 
 def get_meeting_detail(session, meeting_id):
-    return (session.query(Meeting).options(joinedload(Meeting.transcript)).filter(Meeting.id == meeting_id).first())
+    """
+    Fetch one meeting with transcript, summary, and action_items eager-loaded
+    so the caller can read them after session_scope() has exited.
+    """
+    return (
+        session.query(Meeting)
+        .options(
+            joinedload(Meeting.transcript),
+            joinedload(Meeting.summary),
+            joinedload(Meeting.action_items),
+        )
+        .filter(Meeting.id == meeting_id)
+        .first()
+    )
 
 def save_summary(session, meeting_id, summary_text, decisions, agenda_status):
     """
     Insert a summary row linked to an existing meeting_id.
     decisions and agenda_status are stored as JSON strings.
+    Flushes only — see create_meeting() for why.
     """
     summary = Summary(
         meeting_id=meeting_id,
@@ -64,7 +82,7 @@ def save_summary(session, meeting_id, summary_text, decisions, agenda_status):
         agenda_status=json.dumps(agenda_status),
     )
     session.add(summary)
-    session.commit()
+    session.flush()
     session.refresh(summary)
     return summary
 
@@ -72,6 +90,7 @@ def save_action_items(session, meeting_id, action_items):
     """
     Bulk insert action items linked to an existing meeting_id.
     action_items is a list of dicts with task/assignee/deadline keys.
+    Flushes only — see create_meeting() for why.
     """
     rows = [
         ActionItem(
@@ -83,5 +102,5 @@ def save_action_items(session, meeting_id, action_items):
         for item in action_items
     ]
     session.add_all(rows)
-    session.commit()
+    session.flush()
     return rows
