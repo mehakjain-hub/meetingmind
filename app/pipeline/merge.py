@@ -2,11 +2,11 @@ import argparse
 import sys
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 from transcribe import transcribe_audio
 from align import align
 from diarize import diarize
-
 
 def assign_speaker(word_start, word_end, diarization_segments):
     best_overlap = 0
@@ -17,7 +17,6 @@ def assign_speaker(word_start, word_end, diarization_segments):
             best_overlap = overlap
             best_speaker = seg["speaker"]
     return best_speaker
-
 
 def merge_transcript_with_speakers(aligned_segments, diarization_segments):
     tagged_words = []
@@ -32,7 +31,6 @@ def merge_transcript_with_speakers(aligned_segments, diarization_segments):
                 "end": float(word["end"]),
                 "speaker": speaker
             })
-
     turns = []
     current_turn = None
     for w in tagged_words:
@@ -50,9 +48,7 @@ def merge_transcript_with_speakers(aligned_segments, diarization_segments):
             current_turn["text"] += " " + w["word"].strip()
     if current_turn:
         turns.append(current_turn)
-
     return turns
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Merge aligned transcript with speaker diarization")
@@ -60,12 +56,9 @@ if __name__ == "__main__":
     parser.add_argument("--model_size", default="small")
     parser.add_argument("--language", default="en")
     args = parser.parse_args()
-
     whisper_segments, detected_language = transcribe_audio(args.audio_path, args.model_size)
     aligned_segments = align(args.audio_path, whisper_segments, args.language)
     diarization_segments = diarize(args.audio_path)
-
     turns = merge_transcript_with_speakers(aligned_segments, diarization_segments)
-
     for turn in turns:
         print(f"[{turn['start']:.2f}s -> {turn['end']:.2f}s] Speaker {turn['speaker']}: {turn['text']}")

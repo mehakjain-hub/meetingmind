@@ -95,16 +95,9 @@ def _format_agenda(agenda_items: list[str] | None) -> str:
 
 def _chunk_transcript(transcript: str, max_words: int = MAX_WORDS_PER_CHUNK,
                       overlap_words: int = CHUNK_OVERLAP_WORDS) -> list[str]:
-    """
-    Splits transcript into overlapping word-count chunks. No-op (returns [transcript])
-    if it fits in one chunk - which will be true for essentially all 15-min-capped
-    meetings. This exists as a safety net for longer transcripts, not something that
-    needs tuning for the current scope.
-    """
     words = transcript.split()
     if len(words) <= max_words:
         return [transcript]
-
     chunks = []
     start = 0
     while start < len(words):
@@ -117,10 +110,10 @@ def _chunk_transcript(transcript: str, max_words: int = MAX_WORDS_PER_CHUNK,
 
 def _reduce_chunks(agenda_items: list[str] | None, chunk_results: list[MeetingSummary]) -> MeetingSummary:
     partial_notes = "\n\n".join(
-        f"--- Paart {i+1} ---\n"
+        f"--- Part {i+1} ---\n"
         f"Summary: {r.summary}\n"
         f"Decisions: {[d.model_dump() for d in r.decisions]}\n"
-        f"Action items: {[a.model_dimp() for a in r.action_items]}"
+        f"Action items: {[a.model_dump() for a in r.action_items]}"
         for i, r in enumerate(chunk_results)
     )
     prompt = REDUCE_PROMPT.format(
@@ -133,14 +126,13 @@ def _reduce_chunks(agenda_items: list[str] | None, chunk_results: list[MeetingSu
 
 def extract_meeting_summary(transcript: str, agenda_items: list[str] | None = None) -> MeetingSummary:
     chunks = _chunk_transcript(transcript)
-
     if len(chunks) == 1:
         prompt = SUMMARY_PROMPT.format(
             agenda=_format_agenda(agenda_items),
             transcript=chunks[0]
         )
         response = _call_gemini_with_retry(prompt)
-        return MeetingSummary.model_validate_json(response.text)  # Safety Net: don't just trust Gemini's schema adherence
+        return MeetingSummary.model_validate_json(response.text)
 
     # map: extract per chunk (skip agenda check per-chunk, only apply it in the reduce step
     # since a single chunk rarely has the full context to judge "covered" fairly)
