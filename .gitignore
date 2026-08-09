@@ -5,3 +5,5 @@ __pycache__/
 .venv/
 .DS_Store
 .idea/
+sample_data/**/*.wav
+sample_data/**/*.wav
