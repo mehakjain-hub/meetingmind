@@ -10,7 +10,7 @@
 
 **[Setup](#setup) · [Running Locally](#running-locally) · [Architecture](#pipeline) · [Design Decisions](#design-decisions) · [Evaluation](EVALUATION.md) · [Live Demo](#live-demo)**
 
-![MeetingMind home dashboard](docs/Home.png)
+<img src="docs/Home.png" alt="MeetingMind home dashboard" width="700">
 
 An end-to-end AI meeting assistant. Upload raw meeting audio, get back structured
 minutes: a summary, key decisions, action items (assignee/task/deadline), and an
@@ -154,16 +154,20 @@ for a walkthrough.
 ## Screenshots
 
 **Upload** — pick a file, choose model size and language mode
-![Upload page](docs/Upload.png)
+
+<img src="docs/Upload.png" alt="Upload page" width="700">
 
 **Pipeline running** — live progress through preprocessing, transcription, alignment, diarization, cleaning, and extraction
-![Pipeline running](docs/Pipeline_Running.png)
+
+<img src="docs/Pipeline_Running.png" alt="Pipeline running" width="700">
 
 **Results** — summary, decisions, action items, and three-state agenda coverage (covered / partially covered / not covered)
-![Results page](docs/Results.png)
+
+<img src="docs/Results.png" alt="Results page" width="700">
 
 **History** — past meetings, persisted in PostgreSQL
-![History page](docs/History.png)
+
+<img src="docs/History.png" alt="History page" width="700">
 
 ## Design Decisions
 
